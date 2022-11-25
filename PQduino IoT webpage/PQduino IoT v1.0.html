@@ -1,0 +1,1075 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        html {
+            font-family: Verdana, Geneva, Tahoma, sans-serif;
+            display: inline-block;
+            text-align: center;
+            background: linear-gradient(0deg,#1e2730, #717171);
+            background-size: 800% 800%;
+        }
+        body {
+            margin: 0;
+            width: 100%;
+        }
+        .topnav {
+            overflow: hidden;
+            background-color: #5F5F5F;
+            color: #3399FF;
+            font-size: 1rem;
+            padding: 5px;
+        }
+        #authentication-bar{
+            background-color:#8EAFFF;
+            padding-top: 10px;
+            padding-bottom: 10px;
+        }
+        #user-details{
+            color: cadetblue;
+        }
+        .content {
+            padding: 20px;
+        }
+        .card {
+            background-color: white;
+            box-shadow: 2px 2px 12px 1px rgba(140,140,140,.5);
+            padding: 5%;
+        }
+        .cards {
+            max-width: 800px;
+            margin: 0 auto;
+            margin-bottom: 10px;
+            display: grid;
+            grid-gap: 2rem;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 2fr));
+        }
+        .reading {
+            color: #193036;
+        }
+        .date-time{
+            font-size: 0.8rem;
+            color: #1282A2;
+        }
+        button {
+            background-color: #049faa;
+            color: white;
+            padding: 14px 20px;
+            margin: 8px 0;
+            border: none;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        button:hover {
+           opacity: 0.8;
+        }
+        .deletebtn{
+            background-color: #c52c2c;
+        }
+        .form-elements-container{
+            padding: 16px;
+            width: 250px;
+            margin: 0 auto;
+        }
+        input[type=text], input[type=password] {
+            width: 100%;
+            padding: 12px 20px;
+            margin: 8px 0;
+            display: inline-block;
+            border: 1px solid #ccc;
+            box-sizing: border-box;
+        }
+        table {
+            width: 100%;
+            text-align: center;
+            font-size: 0.8rem;
+        }   
+        tr, td {
+            padding: 0.25rem;
+        }
+        tr:nth-child(even) {
+            background-color: #f2f2f2
+        }
+        tr:hover {
+            background-color: #ddd;
+        }
+        th {
+            position: sticky;
+            top: 0;
+            background-color: #50b8b4;
+            color: white;
+        }
+        /* The Modal (background) */
+        .modal {
+            display: none; /* Hidden by default */
+            position: fixed; /* Stay in place */
+            z-index: 1; /* Sit on top */
+            left: 0;
+            top: 0;
+            width: 100%; /* Full width */
+            height: 100%; /* Full height */
+            overflow: auto; /* Enable scroll if needed */
+            background-color: #474e5d;
+            padding-top: 50px;
+        }
+        /* Modal Content/Box */
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto 15% auto; /* 5% from the top, 15% from the bottom and centered */
+            border: 1px solid #888;
+            width: 80%; /* Could be more or less, depending on screen size */
+        }
+        /* Style the horizontal ruler */
+        hr {
+            border: 1px solid #f1f1f1;
+            margin-bottom: 25px;
+        }
+        /* The Modal Close Button (x) */
+        .close {
+            position: absolute;
+            right: 35px;
+            top: 15px;
+            font-size: 40px;
+            font-weight: bold;
+            color: #f1f1f1;
+        }
+        .close:hover,
+        .close:focus {
+            color: #f44336;
+            cursor: pointer;
+        }
+        /* Clear floats */
+        .clearfix::after {
+            content: "";
+            clear: both;
+            display: table;
+        }
+        /* Change styles for cancel button and delete button on extra small screens */
+        @media screen and (max-width: 300px) {
+            .cancelbtn, .deletebtn {
+                width: 100%;
+            }
+        }
+    </style>
+    
+    <title>PQduino Datalogging Firebase App</title>
+    <!-- include Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.8.1/firebase-app.js"></script>
+    <!-- include only the Firebase features as you need -->
+    <script src="https://www.gstatic.com/firebasejs/8.8.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.8.1/firebase-database.js"></script>
+    <script>
+    
+      // REPLACE WITH YOUR APP CONFIG IF YOU WANT TO MAKE YOUR OWN DATA LOGGER
+    const firebaseConfig = {
+      apiKey: "AIzaSyC4DxVKXS0Ol_QZh0xGkx7scvNv50KWpJo",
+      authDomain: "pqduino-sample.firebaseapp.com",
+      databaseURL: "https://pqduino-sample-default-rtdb.firebaseio.com",
+      projectId: "pqduino-sample",
+      storageBucket: "pqduino-sample.appspot.com",
+      messagingSenderId: "577442550306",
+      appId: "1:577442550306:web:d454e599bcec2b00a7707b",
+      measurementId: "G-1MEZZ2FF6T"
+    };
+
+      // Initialize firebase
+      firebase.initializeApp(firebaseConfig);
+
+      // Make auth and database references
+      const auth = firebase.auth();
+      const db = firebase.database();
+
+    </script>
+
+    <!-- include highchartsjs to build the charts-->
+    <script src="https://code.highcharts.com/stock/highstock.js"></script>
+    <!-- include to use jquery-->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <!--include icons from fontawesome-->
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+    <!-- include Gauges Javascript library-->
+    <script src="https://cdn.rawgit.com/Mikhus/canvas-gauges/gh-pages/download/2.1.7/all/gauge.min.js"></script>
+    <!--reference for favicon-->
+    <link rel="icon" type="image/png" href="favicon.png">
+    <!--reference a stylesheet-->
+    <link rel="stylesheet" type="text/css" href="style.css">
+
+  </head>
+
+  <body>
+    <!--TOP BAR-->
+    <div class="topnav">
+      <h1>PQduino Home Powermeter</h1>
+    </div>
+
+    <!--AUTHENTICATION BAR (USER DETAILS/LOGOUT BUTTON)-->
+    <div id="authentication-bar" style="display: none;">
+      <p><span id="authentication-status">User logged in</span>
+        <span id="user-details">USEREMAIL</span>
+        <a href="/" id="logout-link">(logout)</a>
+      </p>
+    </div>
+
+    <!--LOGIN FORM-->
+    <form id="login-form" style="display: none;">
+      <div class="form-elements-container">
+        <label for="input-email"><b>Email</b></label>
+        <input type="text" placeholder="Enter Username" id="input-email" required>
+
+        <label for="input-password"><b>Password</b></label>
+        <input type="password" placeholder="Enter Password" id="input-password" required>
+
+        <button type="submit" id="login-button">Login</button>
+        <p id="error-message" style="color:red;"></p>
+      </div>
+    </form>
+
+    <!--CONTENT (SENSOR READINGS)-->
+    <div class="content-sign-in" id="content-sign-in" style="display: none;">
+
+      <!--LAST UPDATE-->
+      <p><span class ="date-time">Last update: <span id="lastUpdate"></span></span></p>
+      <p>
+      <p>         
+        Cards: <input type="checkbox" id="cards-checkbox" name="cards-checkbox" checked>
+        Gauges: <input type="checkbox" id="gauges-checkbox" name="gauges-checkbox" checked>
+        Charts: <input type="checkbox" id="charts-checkbox" name="charts-checkbox" checked>
+      </p>
+      <div id="cards-div">
+        <div class="cards">
+          <!--TEMPERATURE-->
+          <div class="card">
+            <p><i class="fas fa-thermometer-half" style="color:#059e8a;"></i> TEMPERATURE</p>
+            <p><span class="reading"><span id="temp"></span> &deg;C</span></p>
+          </div>
+          <!--POWER-->
+          <div class="card">
+            <p><i class="fas fa-charging-station" style="color:#00add6;"></i> POWER</p>
+            <p><span class="reading"><span id="power"></span> W;</span></p>
+          </div>
+          <!--VOLTAGE-->
+          <div class="card">
+            <p><i class="fas fa-plug" style="color:#e1e437;"></i> VOLTAGE</p>
+            <p><span class="reading"><span id="volt"></span> V</span></p>
+          </div>
+        </div>
+      </div>
+      <!--GAUGES-->
+      <div id ="gauges-div">
+        <div class="cards">
+          <!--TEMPERATURE-->
+          <div class="card">
+            <canvas id="gauge-temperature"></canvas>
+          </div>
+          <!--POWER-->
+          <div class="card">
+            <canvas id="gauge-power"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!--CHARTS-->
+      <div id="charts-div" style="display:block">
+        <!--SET NUMBER OF READINGS INPUT FIELD-->
+        <div>
+          <p> Number of readings: <input type="number" id="charts-range"></p>
+        </div>
+        <!--TEMPERATURE-CHART-->
+        <div class="cards">
+          <div class="card">
+            <p><i class="fas fa-thermometer-half" style="color:#059e8a;"></i> TEMPERATURE CHART</p>
+            <div id="chart-temperature" class="chart-container"></div>
+          </div>
+        </div>
+        <!--POWER-CHART-->
+        <div class="cards">
+          <div class="card">
+            <p><i class="fas fa-charging-station" style="color:#00add6;"></i> POWER CHART</p>
+            <div id="chart-power" class="chart-container"></div>
+          </div>
+        </div>
+        <!--VOLTAGE-CHART-->
+        <div class="cards">
+          <div class="card">
+            <p><i class="fas fa-plug" style="color:#e1e437;"></i> VOLTAGE CHART</p>
+            <div id="chart-voltage" class="chart-container"></div>
+          </div>
+        </div>
+      </div>
+
+    <!--BUTTONS TO HANDLE DATA-->
+    <p>
+      <!--View data button-->
+      <button id="view-data-button">View all data</button>
+      <!--Hide data button-->
+      <button id="hide-data-button" style= "display:none;">Hide data</button>
+      <!--Delete data button-->
+      <button id="delete-button" class="deletebtn">Delete data</button>
+    </p>
+    <!--Modal to delete data-->
+    <div id="delete-modal" class="modal" sytle="display:none">
+      <span onclick = "document.getElementById('delete-modal').style.display='none'" class="close" title="Close Modal">×</span>
+      <form id= "delete-data-form" class="modal-content" action="/">
+        <div class="container">
+          <h1>Delete Data</h1>
+          <p>Are you sure you want to delete all data from database?</p>
+          <div class="clearfix">
+            <button type="button" onclick="document.getElementById('delete-modal').style.display='none'" class="cancelbtn">Cancel</button>
+            <button type="submit" onclick="document.getElementById('delete-modal').style.display='none'" class="deletebtn">Delete</button>
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <!--TABLE WITH ALL DATA-->
+    <div class ="cards">
+      <div class="card" id="table-container" style= "display:none;">
+        <table id="readings-table">
+            <tr id="theader">
+              <th>Timestamp</th>
+              <th>Temperature (ºC)</th>
+              <th>Power (W)</th>
+              <th>Voltage (V)</th>
+            </tr>
+            <tbody id="tbody">
+            </tbody>
+        </table>
+        <p><button id="load-data" style= "display:none;">More results...</button></p>
+      </div>
+    </div>
+
+  </div>
+  
+    <!--INCLUDE JS FILES-->
+    <script src="scripts/auth.js"></script>
+    <script src="scripts/charts-definition.js"></script>
+    <script src="scripts/gauges-definition.js"></script>
+    <script src="scripts/index.js"></script>
+
+  </body>
+  <script>
+  var Temperature_array = [], Voltage_array = [], Power_array = [];
+      document.addEventListener("DOMContentLoaded", function(){
+    // listen for auth status changes
+    auth.onAuthStateChanged(user => {
+        if (user) {
+          console.log("user logged in");
+          console.log(user);
+          setupUI(user);
+          var uid = user.uid;
+          console.log(uid);
+        } else {
+          console.log("user logged out");
+          setupUI();
+        }
+    });
+
+    // login
+    const loginForm = document.querySelector('#login-form');
+    loginForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        // get user info
+        const email = loginForm['input-email'].value;
+        const password = loginForm['input-password'].value;
+        // log the user in
+        auth.signInWithEmailAndPassword(email, password).then((cred) => {
+            // close the login modal & reset form
+            loginForm.reset();
+            console.log(email);
+        })
+        .catch((error) =>{
+            const errorCode = error.code;
+            const errorMessage = error.message;
+            document.getElementById("error-message").innerHTML = errorMessage;
+            console.log(errorMessage);
+        });
+    });
+
+    // logout
+    const logout = document.querySelector('#logout-link');
+    logout.addEventListener('click', (e) => {
+        e.preventDefault();
+        auth.signOut();
+    });
+    }); 
+    // convert epochtime to JavaScripte Date object
+function epochToJsDate(epochTime){
+  return new Date(epochTime*1000);
+}
+
+// convert time to human-readable format YYYY/MM/DD HH:MM:SS
+function epochToDateTime(epochTime){
+  var epochDate = new Date(epochToJsDate(epochTime));
+  var dateTime = epochDate.getFullYear() + "/" +
+    ("00" + (epochDate.getMonth() + 1)).slice(-2) + "/" +
+    ("00" + epochDate.getDate()).slice(-2) + " " +
+    ("00" + epochDate.getHours()).slice(-2) + ":" +
+    ("00" + epochDate.getMinutes()).slice(-2) + ":" +
+    ("00" + epochDate.getSeconds()).slice(-2);
+
+  return dateTime;
+}
+
+// function to plot values on charts
+function addValues_T(timestamp,value){
+ var x = epochToJsDate(timestamp).getTime();
+ var y = Number (value);
+ Temperature_array.push([x,y]);
+}
+function addValues_V(timestamp,value){
+ var x = epochToJsDate(timestamp).getTime();
+ var y = Number (value);
+ Voltage_array.push([x,y]);
+}
+function addValues_W(timestamp,value){
+ var x = epochToJsDate(timestamp).getTime();
+ var y = Number (value);
+ Power_array.push([x,y]);
+}
+
+
+// DOM elements
+const loginElement = document.querySelector('#login-form');
+const contentElement = document.querySelector("#content-sign-in");
+const userDetailsElement = document.querySelector('#user-details');
+const authBarElement = document.querySelector('#authentication-bar');
+const deleteButtonElement = document.getElementById('delete-button');
+const deleteModalElement = document.getElementById('delete-modal');
+const deleteDataFormElement = document.querySelector('#delete-data-form');
+const viewDataButtonElement = document.getElementById('view-data-button');
+const hideDataButtonElement = document.getElementById('hide-data-button');
+const tableContainerElement = document.querySelector('#table-container');
+const chartsRangeInputElement = document.getElementById('charts-range');
+const loadDataButtonElement = document.getElementById('load-data');
+const cardsCheckboxElement = document.querySelector('input[name=cards-checkbox]');
+const gaugesCheckboxElement = document.querySelector('input[name=gauges-checkbox]');
+const chartsCheckboxElement = document.querySelector('input[name=charts-checkbox]');
+
+// DOM elements for sensor readings
+const cardsReadingsElement = document.querySelector("#cards-div");
+const gaugesReadingsElement = document.querySelector("#gauges-div");
+const chartsDivElement = document.querySelector('#charts-div');
+const tempElement = document.getElementById("temp");
+const powerElement = document.getElementById("power");
+const voltageElement = document.getElementById("volt");
+const updateElement = document.getElementById("lastUpdate")
+
+// MANAGE LOGIN/LOGOUT UI
+const setupUI = (user) => {
+  if (user) {
+    //toggle UI elements
+    loginElement.style.display = 'none';
+    contentElement.style.display = 'block';
+    authBarElement.style.display ='block';
+    userDetailsElement.style.display ='block';
+    userDetailsElement.innerHTML = user.email;
+
+    // get user UID to get data from database
+    var uid = user.uid;
+    console.log(uid);
+
+    // Database paths (with user UID)
+    var dbPath = 'UsersData/' + uid.toString() + '/readings';
+    var chartPath = 'UsersData/' + uid.toString() + '/charts/range';
+
+    // Database references
+    var dbRef = firebase.database().ref(dbPath);
+    var chartRef = firebase.database().ref(chartPath);
+    var last_element;
+    
+    //CHECKBOXES
+    // Checbox (cards for sensor readings)
+    cardsCheckboxElement.addEventListener('change', (e) =>{
+      if (cardsCheckboxElement.checked) {
+        cardsReadingsElement.style.display = 'block';
+      }
+      else{
+        cardsReadingsElement.style.display = 'none';
+      }
+    });
+    // Checbox (gauges for sensor readings)
+    gaugesCheckboxElement.addEventListener('change', (e) =>{
+      if (gaugesCheckboxElement.checked) {
+        gaugesReadingsElement.style.display = 'block';
+      }
+      else{
+        gaugesReadingsElement.style.display = 'none';
+      }
+    });
+    // Checbox (charta for sensor readings)
+    chartsCheckboxElement.addEventListener('change', (e) =>{
+      if (chartsCheckboxElement.checked) {
+        chartsDivElement.style.display = 'block';
+      }
+      else{
+        chartsDivElement.style.display = 'none';
+      }
+    });
+    
+    // CARDS
+    // Get the latest readings and display on cards
+    dbRef.orderByKey().limitToLast(1).on('child_added', snapshot =>{
+      var jsonData = snapshot.toJSON(); // example: {temperature: 25.02, humidity: 50.20, pressure: 1008.48, timestamp:1641317355}
+      var temperature = jsonData.Temperature;
+      var power = jsonData.Power;
+      var voltage = jsonData.Voltage;
+      var timestamp = jsonData.timestamp;
+      // Update DOM elements
+      tempElement.innerHTML = temperature;
+      powerElement.innerHTML = power;
+      voltageElement.innerHTML = voltage;
+      updateElement.innerHTML = epochToDateTime(timestamp);
+    });
+    
+    // GAUGES
+    // Get the latest readings and display on gauges
+    dbRef.orderByKey().limitToLast(1).on('child_added', snapshot =>{
+      var jsonData = snapshot.toJSON(); // example: {temperature: 25.02, humidity: 50.20, pressure: 1008.48, timestamp:1641317355}
+      var temperature = jsonData.Temperature;
+      var power = jsonData.Power;
+      var voltage = jsonData.Voltage;
+      var timestamp = jsonData.timestamp;
+      // Update DOM elements
+      var gaugeT = createTemperatureGauge();
+      var gaugeP = createPowerGauge();
+      last_element=timestamp;
+      gaugeT.draw();
+      gaugeP.draw();
+      gaugeT.value = temperature;
+      gaugeP.value = power;
+      updateElement.innerHTML = epochToDateTime(timestamp);
+    });
+
+    // CHARTS
+    // Number of readings to plot on charts
+    var chartRange = 0;
+    // Get number of readings to plot saved on database (runs when the page first loads and whenever there's a change in the database)
+    chartRef.on('value', snapshot =>{
+      chartRange = Number(snapshot.val());
+      console.log(chartRange);
+      // Delete all data from charts to update with new values when a new range is selected
+      chartT.destroy();
+      chartW.destroy();
+      chartV.destroy();
+      // Render new charts to display new range of data
+      chartT = createTemperatureChart();
+      chartW = createPowerChart();
+      chartV = createVoltageChart();
+      // Update the charts with the new range
+      // Get the latest readings and plot them on charts (the number of plotted readings corresponds to the chartRange value)
+      dbRef.orderByKey().limitToLast(chartRange).on('child_added', snapshot =>{
+        var jsonData = snapshot.toJSON(); // example: {temperature: 25.02, humidity: 50.20, pressure: 1008.48, timestamp:1641317355}
+        // Save values on variables
+        var temperature = jsonData.Temperature;
+        var power = jsonData.Power;
+        var voltage = jsonData.Voltage;
+        var timestamp = jsonData.timestamp;
+        // Plot the values on the charts
+        addValues_T(timestamp,temperature);
+        addValues_W(timestamp,power);
+        addValues_V(timestamp,voltage);
+        if (timestamp==last_element){
+            chartT =createTemperatureChart();
+            chartW = createPowerChart();
+            chartV = createVoltageChart();
+        }
+      });
+    });
+
+    // Update database with new range (input field)
+    chartsRangeInputElement.onchange = () =>{
+      chartRef.set(chartsRangeInputElement.value);
+    };
+
+    // DELETE DATA
+    // Add event listener to open modal when click on "Delete Data" button
+    deleteButtonElement.addEventListener('click', e =>{
+      console.log("Remove data");
+      e.preventDefault;
+      deleteModalElement.style.display="block";
+    });
+
+    // Add event listener when delete form is submited
+    deleteDataFormElement.addEventListener('submit', (e) => {
+      // delete data (readings)
+      dbRef.remove();
+    });
+
+    // TABLE
+    var lastReadingTimestamp; //saves last timestamp displayed on the table
+    // Function that creates the table with the first 100 readings
+    function createTable(){
+      // append all data to the table
+      var firstRun = true;
+      dbRef.orderByKey().limitToLast(100).on('child_added', function(snapshot) {
+        if (snapshot.exists()) {
+          var jsonData = snapshot.toJSON();
+          console.log(jsonData);
+          var temperature = jsonData.Temperature;
+          var power = jsonData.Power;
+          var voltage = jsonData.Voltage;
+          var timestamp = jsonData.timestamp;
+          var content = '';
+          content += '<tr>';
+          content += '<td>' + epochToDateTime(timestamp) + '</td>';
+          content += '<td>' + temperature + '</td>';
+          content += '<td>' + power + '</td>';
+          content += '<td>' + voltage + '</td>';
+          content += '</tr>';
+          $('#tbody').prepend(content);
+          // Save lastReadingTimestamp --> corresponds to the first timestamp on the returned snapshot data
+          if (firstRun){
+            lastReadingTimestamp = timestamp;
+            firstRun=false;
+            console.log(lastReadingTimestamp);
+          }
+        }
+      });
+    };
+
+    // append readings to table (after pressing More results... button)
+    function appendToTable(){
+      var dataList = []; // saves list of readings returned by the snapshot (oldest-->newest)
+      var reversedList = []; // the same as previous, but reversed (newest--> oldest)
+      console.log("APEND");
+      dbRef.orderByKey().limitToLast(100).endAt(lastReadingTimestamp).once('value', function(snapshot) {
+        // convert the snapshot to JSON
+        if (snapshot.exists()) {
+          snapshot.forEach(element => {
+            var jsonData = element.toJSON();
+            dataList.push(jsonData); // create a list with all data
+          });
+          lastReadingTimestamp = dataList[0].timestamp; //oldest timestamp corresponds to the first on the list (oldest --> newest)
+          reversedList = dataList.reverse(); // reverse the order of the list (newest data --> oldest data)
+
+          var firstTime = true;
+          // loop through all elements of the list and append to table (newest elements first)
+          reversedList.forEach(element =>{
+            if (firstTime){ // ignore first reading (it's already on the table from the previous query)
+              firstTime = false;
+            }
+            else{
+              var temperature = element.temperature;
+              var power = element.power;
+              var voltage = element.voltage;
+              var timestamp = element.timestamp;
+              var content = '';
+              content += '<tr>';
+              content += '<td>' + epochToDateTime(timestamp) + '</td>';
+              content += '<td>' + temperature + '</td>';
+              content += '<td>' + power + '</td>';
+              content += '<td>' + voltage + '</td>';
+              content += '</tr>';
+              $('#tbody').append(content);
+            }
+          });
+        }
+      });
+    }
+
+    viewDataButtonElement.addEventListener('click', (e) =>{
+      // Toggle DOM elements
+      tableContainerElement.style.display = 'block';
+      viewDataButtonElement.style.display ='none';
+      hideDataButtonElement.style.display ='inline-block';
+      loadDataButtonElement.style.display = 'inline-block'
+      createTable();
+    });
+
+    loadDataButtonElement.addEventListener('click', (e) => {
+      appendToTable();
+    });
+
+    hideDataButtonElement.addEventListener('click', (e) => {
+      tableContainerElement.style.display = 'none';
+      viewDataButtonElement.style.display = 'inline-block';
+      hideDataButtonElement.style.display = 'none';
+    });
+
+  // IF USER IS LOGGED OUT
+  } else{
+    // toggle UI elements
+    loginElement.style.display = 'block';
+    authBarElement.style.display ='none';
+    userDetailsElement.style.display ='none';
+    contentElement.style.display = 'none';
+  }
+}
+// Create the charts when the web page loads
+window.addEventListener('load', onload);
+
+function onload(event){
+  chartT = createTemperatureChart();
+  chartW = createPowerChart();
+  chartV = createVoltageChart();
+}
+
+// Create Temperature Chart
+function createTemperatureChart() {
+  var chart = new Highcharts.Chart({
+    chart:{ 
+      renderTo:'chart-temperature',
+	zoomType: 'x' 
+    },
+    rangeSelector: {
+        enabled: true,
+        allButtonsEnabled: true,
+        inputEnabled: true,
+        buttons: [{
+          type: 'day',
+          count: 1,
+          text: '1D'
+        }, {
+          type: 'week',
+          count: 1,
+          text: '1W'
+        }, {
+          type: 'month',
+          count: 1,
+          text: '1M'
+        }, {
+          type: 'all',
+          text: 'All'
+        }],
+        selected: 4
+      },
+    series: [
+      {
+        data: Temperature_array,
+        type: 'area',
+        name: 'PQduino_Temperature'
+      }
+    ],
+    title: { 
+      text: undefined
+    },
+    plotOptions: {
+        area: {
+            fillColor: {
+            linearGradient: {
+                x1: 0,
+                y1: 0,
+                x2: 0,
+                y2: 1
+            },
+            stops: [
+            [0, Highcharts.getOptions().colors[0]],
+            [1, Highcharts.color(Highcharts.getOptions().colors[0]).setOpacity(0).get('rgba')]
+            ]
+        },
+        marker: {
+        radius: 2
+        },
+        lineWidth: 1,
+        states: {
+            hover: {
+        lineWidth: 1
+        }
+        },
+        threshold: null
+        }
+    },
+    xAxis: {
+      type: 'datetime',
+      dateTimeLabelFormats: { second: '%H:%M:%S' }
+    },
+    yAxis: {
+      title: { 
+        text: 'Temperature Celsius Degrees' 
+      }
+    },
+    legend: {
+        enabled: false
+    },
+    time: {
+        timezoneOffset: 5 * 60
+    },
+    credits: { 
+      enabled: false 
+    }
+    
+  });
+  return chart;
+}
+
+// Create Power Chart
+function createPowerChart(){
+  var chart = new Highcharts.Chart({
+    chart:{ 
+      renderTo:'chart-power',
+	zoomType: 'x' 
+    },
+    rangeSelector: {
+        enabled: true,
+        allButtonsEnabled: true,
+        inputEnabled: true,
+        buttons: [{
+          type: 'day',
+          count: 1,
+          text: '1D'
+        }, {
+          type: 'week',
+          count: 1,
+          text: '1W'
+        }, {
+          type: 'month',
+          count: 1,
+          text: '1M'
+        }, {
+          type: 'all',
+          text: 'All'
+        }],
+        selected: 4
+      },
+    series: [
+      {
+        data: Power_array,
+        type: 'area',
+        name: 'PQduino_Power'
+      }
+    ],
+    title: { 
+      text: undefined
+    },
+    plotOptions: {
+        area: {
+            fillColor: {
+            linearGradient: {
+                x1: 0,
+                y1: 0,
+                x2: 0,
+                y2: 1
+            },
+            stops: [
+            [0, Highcharts.getOptions().colors[0]],
+            [1, Highcharts.color(Highcharts.getOptions().colors[0]).setOpacity(0).get('rgba')]
+            ]
+        },
+        marker: {
+        radius: 2
+        },
+        lineWidth: 1,
+        states: {
+            hover: {
+        lineWidth: 1
+        }
+        },
+        threshold: null
+        }
+    },
+    xAxis: {
+      type: 'datetime',
+      dateTimeLabelFormats: { second: '%H:%M:%S' }
+    },
+    yAxis: {
+      title: { 
+        text: 'Power (W)' 
+      }
+    },
+    legend: {
+        enabled: false
+    },
+    time: {
+        timezoneOffset: 5 * 60
+    },
+    credits: { 
+      enabled: false 
+    }
+    
+  });
+  return chart;
+}
+
+
+// Create Voltage Chart
+function createVoltageChart() {
+  var chart = new Highcharts.Chart({
+    chart:{ 
+      renderTo:'chart-voltage',
+	zoomType: 'x' 
+    },
+    rangeSelector: {
+        enabled: true,
+        allButtonsEnabled: true,
+        inputEnabled: true,
+        buttons: [{
+          type: 'day',
+          count: 1,
+          text: '1D'
+        }, {
+          type: 'week',
+          count: 1,
+          text: '1W'
+        }, {
+          type: 'month',
+          count: 1,
+          text: '1M'
+        }, {
+          type: 'all',
+          text: 'All'
+        }],
+        selected: 4
+      },
+    series: [
+      {
+        data: Voltage_array,
+        type: 'area',
+        name: 'PQduino_Voltage'
+      }
+    ],
+    title: { 
+      text: undefined
+    },
+    plotOptions: {
+        area: {
+            fillColor: {
+            linearGradient: {
+                x1: 0,
+                y1: 0,
+                x2: 0,
+                y2: 1
+            },
+            stops: [
+            [0, Highcharts.getOptions().colors[0]],
+            [1, Highcharts.color(Highcharts.getOptions().colors[0]).setOpacity(0).get('rgba')]
+            ]
+        },
+        marker: {
+        radius: 2
+        },
+        lineWidth: 1,
+        states: {
+            hover: {
+        lineWidth: 1
+        }
+        },
+        threshold: null
+        }
+    },
+    xAxis: {
+      type: 'datetime',
+      dateTimeLabelFormats: { second: '%H:%M:%S' }
+    },
+    yAxis: {
+      title: { 
+        text: 'Voltage (V)' 
+      }
+    },
+    legend: {
+        enabled: false
+    },
+    time: {
+        timezoneOffset: 5 * 60
+    },
+    credits: { 
+      enabled: false 
+    }
+    
+  });
+  return chart;
+}
+// Create Temperature Gauge
+function createTemperatureGauge() {
+    var gauge = new LinearGauge({
+        renderTo: 'gauge-temperature',
+        width: 120,
+        height: 400,
+        units: "Temperature C",
+        minValue: 0,
+        startAngle: 90,
+        ticksAngle: 180,
+        maxValue: 40,
+        colorValueBoxRect: "#049faa",
+        colorValueBoxRectEnd: "#049faa",
+        colorValueBoxBackground: "#f1fbfc",
+        valueDec: 2,
+        valueInt: 2,
+        majorTicks: [
+            "0",
+            "5",
+            "10",
+            "15",
+            "20",
+            "25",
+            "30",
+            "35",
+            "40"
+        ],
+        minorTicks: 4,
+        strokeTicks: true,
+        highlights: [
+            {
+                "from": 30,
+                "to": 40,
+                "color": "rgba(200, 50, 50, .75)"
+            }
+        ],
+        colorPlate: "#fff",
+        colorBarProgress: "#CC2936",
+        colorBarProgressEnd: "#049faa",
+        borderShadowWidth: 0,
+        borders: false,
+        needleType: "arrow",
+        needleWidth: 2,
+        needleCircleSize: 7,
+        needleCircleOuter: true,
+        needleCircleInner: false,
+        animationDuration: 1500,
+        animationRule: "linear",
+        barWidth: 10,
+    });
+    return gauge;
+}
+
+// Create Power Gauge
+function createPowerGauge(){
+    var gauge = new RadialGauge({
+        renderTo: 'gauge-power',
+        width: 300,
+        height: 300,
+        units: "Power (W)",
+        minValue: 0,
+        maxValue: 100,
+        colorValueBoxRect: "#049faa",
+        colorValueBoxRectEnd: "#049faa",
+        colorValueBoxBackground: "#f1fbfc",
+        valueInt: 2,
+        majorTicks: [
+            "0",
+            "20",
+            "40",
+            "60",
+            "80",
+            "100"
+    
+        ],
+        minorTicks: 4,
+        strokeTicks: true,
+        highlights: [
+            {
+                "from": 80,
+                "to": 100,
+                "color": "#03C0C1"
+            }
+        ],
+        colorPlate: "#fff",
+        borderShadowWidth: 0,
+        borders: false,
+        needleType: "line",
+        colorNeedle: "#007F80",
+        colorNeedleEnd: "#007F80",
+        needleWidth: 2,
+        needleCircleSize: 3,
+        colorNeedleCircleOuter: "#007F80",
+        needleCircleOuter: true,
+        needleCircleInner: false,
+        animationDuration: 1500,
+        animationRule: "linear"
+    });
+    return gauge;
+}
+  </script>
+
+</html>

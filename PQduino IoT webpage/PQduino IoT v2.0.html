@@ -1,0 +1,934 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        html {
+            font-family: Verdana, Geneva, Tahoma, sans-serif;
+            display: inline-block;
+            text-align: center;
+            background: linear-gradient(0deg,#1e2730, #717171);
+            background-size: 800% 800%;
+        }
+        body {
+            margin: 0;
+            width: 100%;
+        }
+        .topnav {
+            overflow: hidden;
+            background-color: #5F5F5F;
+            color: #3399FF;
+            font-size: 1rem;
+            padding: 5px;
+        }
+        #authentication-bar{
+            background-color:#8EAFFF;
+            padding-top: 2px;
+            padding-bottom: 2px;
+        }
+        #user-details{
+            color: cadetblue;
+        }
+        .content {
+            padding: 10px;
+        }
+        .date-time{
+            font-size: 1rem;
+            color: #454876;
+        }
+        .card {
+            background-color: white;
+            box-shadow: 2px 2px 12px 1px rgba(140,140,140,.5);
+            padding: 2px;
+        }
+        .cards {
+            max-width: 800px;
+            margin: 0 auto;
+            margin-bottom: 10px;
+            display: grid;
+            grid-gap: 2rem;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 2fr));
+        }
+        .form-elements-container{
+            padding: 16px;
+            width: 250px;
+            margin: 0 auto;
+        }
+        input[type=text], input[type=password] {
+            width: 100%;
+            padding: 12px 20px;
+            margin: 8px 0;
+            display: inline-block;
+            border: 1px solid #ccc;
+            box-sizing: border-box;
+        }
+        tr, td {
+            padding: 0.25rem;
+        }
+        tr:nth-child(even) {
+            background-color: #f2f2f2
+        }
+        tr:hover {
+            background-color: #ddd;
+        }
+        th {
+            position: sticky;
+            top: 0;
+            background-color: #50b8b4;
+            color: white;
+        }
+        /* The Modal (background) */
+        .modal {
+            display: none; /* Hidden by default */
+            position: fixed; /* Stay in place */
+            z-index: 1; /* Sit on top */
+            left: 0;
+            top: 0;
+            width: 100%; /* Full width */
+            height: 100%; /* Full height */
+            overflow: auto; /* Enable scroll if needed */
+            background-color: #474e5d;
+            padding-top: 50px;
+        }
+        /* Modal Content/Box */
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto 15% auto; /* 5% from the top, 15% from the bottom and centered */
+            border: 1px solid #888;
+            width: 80%; /* Could be more or less, depending on screen size */
+        }
+        /* Style the horizontal ruler */
+        hr {
+            border: 1px solid #f1f1f1;
+            margin-bottom: 25px;
+        }
+        /* The Modal Close Button (x) */
+        .close {
+            position: absolute;
+            right: 35px;
+            top: 15px;
+            font-size: 40px;
+            font-weight: bold;
+            color: #f1f1f1;
+        }
+        .close:hover,
+        .close:focus {
+            color: #f44336;
+            cursor: pointer;
+        }
+        /* Clear floats */
+        .clearfix::after {
+            content: "";
+            clear: both;
+            display: table;
+        }
+        /* Change styles for cancel button and delete button on extra small screens */
+        @media screen and (max-width: 300px) {
+            .cancelbtn, .deletebtn {
+                width: 100%;
+            }
+        }
+    </style>
+    <title>PQduino Datalogging Firebase App</title>
+    <!-- include Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.8.1/firebase-app.js"></script>
+    <!-- include only the Firebase features as you need -->
+    <script src="https://www.gstatic.com/firebasejs/8.8.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.8.1/firebase-database.js"></script>
+    <script>
+    
+      // REPLACE WITH YOUR APP CONFIG IF YOU WANT TO MAKE YOUR OWN DATA LOGGER
+    const firebaseConfig = {
+      apiKey: "AIzaSyC4DxVKXS0Ol_QZh0xGkx7scvNv50KWpJo",
+      authDomain: "pqduino-sample.firebaseapp.com",
+      databaseURL: "https://pqduino-sample-default-rtdb.firebaseio.com",
+      projectId: "pqduino-sample",
+      storageBucket: "pqduino-sample.appspot.com",
+      messagingSenderId: "577442550306",
+      appId: "1:577442550306:web:d454e599bcec2b00a7707b",
+      measurementId: "G-1MEZZ2FF6T"
+    };
+
+      // Initialize firebase
+      firebase.initializeApp(firebaseConfig);
+
+      // Make auth and database references
+      const auth = firebase.auth();
+      const db = firebase.database();
+
+    </script>
+
+    <!-- include highchartsjs to build the charts-->
+    <script src="https://code.highcharts.com/stock/highstock.js"></script>
+    <script
+        type="text/javascript"
+        src="https://code.jquery.com/jquery-git.js"
+    ></script>
+    <script src="https://code.highcharts.com/stock/modules/exporting.js"></script>
+    <script src="https://code.highcharts.com/stock/modules/export-data.js"></script>
+    <script src="https://code.highcharts.com/stock/modules/accessibility.js"></script>
+    <!-- include to use jquery-->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <!--include icons from fontawesome-->
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+    <!-- include Gauges Javascript library-->
+    <script src="https://cdn.rawgit.com/Mikhus/canvas-gauges/gh-pages/download/2.1.7/all/gauge.min.js"></script>
+    <!--reference for favicon-->
+    <link rel="icon" type="image/png" href="favicon.png">
+    <!--reference a stylesheet-->
+    <link rel="stylesheet" type="text/css" href="style.css">
+
+  </head>
+
+  <body>
+    <!--TOP BAR-->
+    <div class="topnav">
+      <h1>PQduino Home Powermeter</h1>
+    </div>
+
+    <!--AUTHENTICATION BAR (USER DETAILS/LOGOUT BUTTON)-->
+    <div id="authentication-bar" style="display: none;">
+      <p><span id="authentication-status">User logged in</span>
+        <span id="user-details">USEREMAIL</span>
+        <a href="/" id="logout-link">(logout)</a>
+      </p>
+    </div>
+
+    <!--LOGIN FORM-->
+    <form id="login-form" style="display: none;">
+      <div class="form-elements-container">
+        <label for="input-email"><b>Email</b></label>
+        <input type="text" placeholder="Enter Username" id="input-email" required>
+
+        <label for="input-password"><b>Password</b></label>
+        <input type="password" placeholder="Enter Password" id="input-password" required>
+
+        <button type="submit" id="login-button">Login</button>
+        <p id="error-message" style="color:red;"></p>
+      </div>
+    </form>
+    <!--CONTENT (SENSOR READINGS)-->
+    <div class="content-sign-in" id="content-sign-in" style="display: none;">
+      <!--LAST UPDATE-->
+      <p><span class ="date-time">Last update: <span id="lastUpdate"></span></span></p>
+      <p>
+      <p><span class ="date-time">Energy consumption: <span id="Energy_label"></span></span></p>
+      <p><span class ="date-time">From:<input type="date" id="f_date" /> To: <input type="date" id="t_date" /></span></p>
+      <!--CHARTS-->
+      <div id="charts-div" style="display:block">
+         <div>
+          <p> <input type="number" style= "display:none;" id="charts-range"></p>
+        </div>
+        <!--ENERGY-CHART-->
+        <div class="cards">
+          <div class="card">
+            <p><i class="fas fa-tachometer-alt" style="color:#e1e437;"></i> ENERGY CHART</p>
+            <div id="chart-energy" class="chart-container"></div>
+          </div>
+        </div>
+        <!--POWER-CHART-->
+        <div class="cards">
+          <div class="card">
+            <p><i class="fas fa-charging-station" style="color:#00add6;"></i> POWER CHART</p>
+            <div id="chart-power" class="chart-container"></div>
+          </div>
+        </div>
+        <!--VOLTAGE-CHART-->
+        <div class="cards">
+          <div class="card">
+            <p><i class="fas fa-plug" style="color:#e1e437;"></i> VOLTAGE CHART</p>
+            <div id="chart-voltage" class="chart-container"></div>
+          </div>
+        </div>
+        <!--CURRENT-CHART-->
+        <div class="cards">
+          <div class="card">
+            <p><i class="fas fa-lightbulb" style="color:#e1e437;"></i> CURRENT CHART</p>
+            <div id="chart-current" class="chart-container"></div>
+          </div>
+        </div>
+        <!--TEMPERATURE-CHART-->
+        <div class="cards">
+          <div class="card">
+            <p><i class="fas fa-thermometer-half" style="color:#059e8a;"></i> TEMPERATURE CHART</p>
+            <div id="chart-temperature" class="chart-container"></div>
+          </div>
+        </div>
+      </div>
+  </div>
+  
+    <!--INCLUDE JS FILES-->
+    <script src="scripts/auth.js"></script>
+    <script src="scripts/charts-definition.js"></script>
+    <script src="scripts/index.js"></script>
+
+  </body>
+  <script>
+  var Temperature_array = [], VoltageMax_array = [], VoltageMin_array = [], CurrentMax_array = [], CurrentMin_array = [], PowerMax_array = [], PowerMin_array = [], Energy_array = [];
+  var Energy_Sum, Energy_prediction;
+      document.addEventListener("DOMContentLoaded", function(){
+    // listen for auth status changes
+    auth.onAuthStateChanged(user => {
+        if (user) {
+          console.log("user logged in");
+          console.log(user);
+          setupUI(user);
+          var uid = "iLPTysyT7QakXYb5MsYdhvEz5Vo2";
+          console.log(uid);
+        } else {
+          console.log("user logged out");
+          setupUI();
+        }
+    });
+    // login
+    const loginForm = document.querySelector('#login-form');
+    loginForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        // get user info
+        const email = loginForm['input-email'].value;
+        const password = loginForm['input-password'].value;
+        // log the user in
+        auth.signInWithEmailAndPassword(email, password).then((cred) => {
+            // close the login modal & reset form
+            loginForm.reset();
+            console.log(email);
+        })
+        .catch((error) =>{
+            const errorCode = error.code;
+            const errorMessage = error.message;
+            document.getElementById("error-message").innerHTML = errorMessage;
+            console.log(errorMessage);
+        });
+    });
+
+    // logout
+    const logout = document.querySelector('#logout-link');
+    logout.addEventListener('click', (e) => {
+        e.preventDefault();
+        auth.signOut();
+    });
+    }); 
+    // convert epochtime to JavaScripte Date object
+function epochToJsDate(epochTime){
+  return new Date(epochTime*1000);
+}
+
+// convert time to human-readable format YYYY/MM/DD HH:MM:SS
+function epochToDateTime(epochTime){
+  var epochDate = new Date(epochToJsDate(epochTime));
+  var dateTime = epochDate.getFullYear() + "/" +
+    ("00" + (epochDate.getMonth() + 1)).slice(-2) + "/" +
+    ("00" + epochDate.getDate()).slice(-2) + " " +
+    ("00" + epochDate.getHours()).slice(-2) + ":" +
+    ("00" + epochDate.getMinutes()).slice(-2) + ":" +
+    ("00" + epochDate.getSeconds()).slice(-2);
+
+  return dateTime;
+}
+function epochToDate(epochTime){
+  var epochDates = new Date(epochToJsDate(epochTime));
+  var date = epochDates.getFullYear() + "-" +
+    ("00" + (epochDates.getMonth() + 1)).slice(-2) + "-" +
+    ("00" + epochDates.getDate()).slice(-2);
+
+  return date;
+}
+
+// function to plot values on charts
+function addValues_T(timestamp,value){
+ var x = epochToJsDate(timestamp).getTime();
+ var y = Number (value);
+ Temperature_array.push([x,y]);
+}
+function addValues_V(timestamp,value1,value2){
+ var x = epochToJsDate(timestamp).getTime();
+ var y1 = Number (value1);
+ var y2 = Number (value2);
+ VoltageMax_array.push([x,y1]);
+ VoltageMin_array.push([x,y2]);
+}
+function addValues_A(timestamp,value1,value2){
+ var x = epochToJsDate(timestamp).getTime();
+ var y1 = Number (value1);
+ var y2 = Number (value2);
+ CurrentMax_array.push([x,y1]);
+ CurrentMin_array.push([x,y2]);
+}
+function addValues_W(timestamp,value1,value2){
+ var x = epochToJsDate(timestamp).getTime();
+ var y1 = Number (value1);
+ var y2 = Number (value2);
+ PowerMax_array.push([x,y1]);
+ PowerMin_array.push([x,y2]);
+}
+function addValues_E(timestamp,value){
+ var x = epochToJsDate(timestamp).getTime();
+ var y = Number (value);
+ Energy_array.push([x,y]);
+}
+function getEnergy_Sum(){
+    Energy_Sum=0;
+        var from=21600000+new Date(from_date.value).getTime();
+        var to=21600000+86399000+new Date(to_date.value).getTime();
+    for (var i=0;i<Energy_array.length;i++){
+        if(Energy_array[i][0]>=from && Energy_array[i][0]<=to){
+            Energy_Sum=Energy_Sum+Energy_array[i][1];
+        }
+    }
+    Energy_prediction=0.001*Energy_Sum*60/((to+1000-from)/86400000);
+    if(Energy_prediction>0){
+    energy_label.innerHTML = Energy_Sum.toFixed(2) + " Wh, at this rate you will pay for "+Energy_prediction.toFixed(2)+ " kWh in a bimonthly invoice";
+    }
+}
+// DOM elements
+const loginElement = document.querySelector('#login-form');
+const contentElement = document.querySelector("#content-sign-in");
+const userDetailsElement = document.querySelector('#user-details');
+const authBarElement = document.querySelector('#authentication-bar');
+const chartsRangeInputElement = document.getElementById('charts-range');
+const updateElement = document.getElementById('lastUpdate');
+const energy_label = document.getElementById('Energy_label');
+const from_date = document.getElementById('f_date');
+const to_date = document.getElementById('t_date');
+
+// MANAGE LOGIN/LOGOUT UI
+const setupUI = (user) => {
+  if (user) {
+    //toggle UI elements
+    loginElement.style.display = 'none';
+    contentElement.style.display = 'block';
+    authBarElement.style.display ='block';
+    userDetailsElement.style.display ='block';
+    userDetailsElement.innerHTML = user.email;
+
+    // get user UID to get data from database
+    var uid = "iLPTysyT7QakXYb5MsYdhvEz5Vo2";
+    console.log(uid);
+
+    // Database paths (with user UID)
+    var dbPath = 'UsersData/' + uid.toString() + '/readings';
+    var chartPath = 'UsersData/' + uid.toString() + '/charts/range';
+
+    // Database references
+    var dbRef = firebase.database().ref(dbPath);
+    var chartRef = firebase.database().ref(chartPath);
+    var first_element, last_element;
+    
+    // Get the first readings
+    dbRef.orderByKey().limitToFirst(1).on('child_added', snapshot =>{
+      var jsonData = snapshot.toJSON(); 
+      first_element=jsonData.timestamp;
+      from_date.value = epochToDate(first_element);
+    });
+    // Get the latest readings
+    dbRef.orderByKey().limitToLast(1).on('child_added', snapshot =>{
+      var jsonData = snapshot.toJSON(); 
+      last_element=jsonData.timestamp;
+      updateElement.innerHTML = epochToDateTime(last_element);
+      to_date.value = epochToDate(last_element);
+    });
+
+
+    // CHARTS
+    chartRef.on('value', snapshot =>{
+      dbRef.orderByKey().on('child_added', snapshot =>{
+        var jsonData = snapshot.toJSON(); // example: {temperature: 25.02, humidity: 50.20, pressure: 1008.48, timestamp:1641317355}
+        // Save values on variables
+        var temperature = jsonData.Temperature;
+        var power_max = jsonData.Power_max;
+        var power_min = jsonData.Power_min;
+        var voltage_max = jsonData.Voltage_max;
+        var voltage_min = jsonData.Voltage_min;
+        var currents_max = jsonData.Current_max;
+        var currents_min = jsonData.Current_min;
+        var energy = jsonData.Energy;
+        var timestamp = jsonData.timestamp;
+        // Plot the values on the charts
+        addValues_T(timestamp,temperature);
+        addValues_W(timestamp,power_max,power_min);
+        addValues_V(timestamp,voltage_max,voltage_min);
+        addValues_A(timestamp,currents_max,currents_min);
+        addValues_E(timestamp,energy);
+        if (timestamp==last_element){
+            chartT =createTemperatureChart();
+            chartW = createPowerChart();
+            chartV = createVoltageChart();
+            chartA = createCurrentChart();
+            chartE = createEnergyChart();
+            getEnergy_Sum();
+        }
+      });
+    });
+    from_date.addEventListener('change', e =>{
+        getEnergy_Sum();
+    });
+    to_date.addEventListener('change', e =>{
+        getEnergy_Sum();
+    });
+    // Update database with new range (input field)
+    chartsRangeInputElement.onchange = () =>{
+      chartRef.set(chartsRangeInputElement.value);
+    };
+  // IF USER IS LOGGED OUT
+  } else{
+    // toggle UI elements
+    loginElement.style.display = 'block';
+    authBarElement.style.display ='none';
+    userDetailsElement.style.display ='none';
+    contentElement.style.display = 'none';
+  }
+}
+// Create the charts when the web page loads
+window.addEventListener('load', onload);
+
+function onload(event){
+  chartT = createTemperatureChart();
+  chartW = createPowerChart();
+  chartV = createVoltageChart();
+  chartA = createCurrentChart();
+  chartE = createEnergyChart();
+}
+// Create Temperature Chart
+function createTemperatureChart() {
+  var chart = new Highcharts.Chart({
+    chart:{ 
+      renderTo:'chart-temperature',
+	zoomType: 'x' 
+    },
+    rangeSelector: {
+        enabled: true,
+        allButtonsEnabled: true,
+        inputEnabled: true,
+        buttons: [{
+          type: 'day',
+          count: 1,
+          text: '1D'
+        }, {
+          type: 'week',
+          count: 1,
+          text: '1W'
+        }, {
+          type: 'month',
+          count: 1,
+          text: '1M'
+        }, {
+          type: 'all',
+          text: 'All'
+        }],
+        selected: 4
+      },
+    series: [
+      {
+        data: Temperature_array,
+        type: 'area',
+        name: 'PQduino_Temperature'
+      }
+    ],
+    title: { 
+      text: undefined
+    },
+    plotOptions: {
+        area: {
+            fillColor: {
+            linearGradient: {
+                x1: 0,
+                y1: 0,
+                x2: 0,
+                y2: 1
+            },
+            stops: [
+            [0, Highcharts.getOptions().colors[0]],
+            [1, Highcharts.color(Highcharts.getOptions().colors[0]).setOpacity(0).get('rgba')]
+            ]
+        },
+        marker: {
+        radius: 2
+        },
+        lineWidth: 1,
+        states: {
+            hover: {
+        lineWidth: 1
+        }
+        },
+        threshold: null
+        }
+    },
+    xAxis: {
+      type: 'datetime',
+      dateTimeLabelFormats: { second: '%H:%M:%S' }
+    },
+    yAxis: {
+      title: { 
+        text: 'Temperature Celsius Degrees' 
+      }
+    },
+    legend: {
+        enabled: false
+    },
+    time: {
+        timezoneOffset: 6 * 60
+    },
+    credits: { 
+      enabled: false 
+    }
+    
+  });
+  return chart;
+}
+
+// Create Power Chart
+function createPowerChart(){
+  var chart = new Highcharts.Chart({
+    chart:{ 
+      renderTo:'chart-power',
+	zoomType: 'x' 
+    },
+    rangeSelector: {
+        enabled: true,
+        allButtonsEnabled: true,
+        inputEnabled: true,
+        buttons: [{
+          type: 'day',
+          count: 1,
+          text: '1D'
+        }, {
+          type: 'week',
+          count: 1,
+          text: '1W'
+        }, {
+          type: 'month',
+          count: 1,
+          text: '1M'
+        }, {
+          type: 'all',
+          text: 'All'
+        }],
+        selected: 4
+      },
+    series: [
+      {
+        data: PowerMax_array,
+        type: 'area',
+        name: 'PQduino_Power Max'
+      },
+      {
+        data: PowerMin_array,
+        type: 'area',
+        name: 'PQduino_Power Min'
+      }
+    ],
+    title: { 
+      text: undefined
+    },
+    plotOptions: {
+        area: {
+            fillColor: {
+            linearGradient: {
+                x1: 0,
+                y1: 0,
+                x2: 0,
+                y2: 1
+            },
+            stops: [
+            [0, Highcharts.getOptions().colors[0]],
+            [1, Highcharts.color(Highcharts.getOptions().colors[0]).setOpacity(0).get('rgba')]
+            ]
+        },
+        marker: {
+        radius: 2
+        },
+        lineWidth: 1,
+        states: {
+            hover: {
+        lineWidth: 1
+        }
+        },
+        threshold: null
+        }
+    },
+    xAxis: {
+      type: 'datetime',
+      dateTimeLabelFormats: { second: '%H:%M:%S' }
+    },
+    yAxis: {
+      title: { 
+        text: 'Power (W)' 
+      }
+    },
+    legend: {
+        enabled: false
+    },
+    time: {
+        timezoneOffset: 6 * 60
+    },
+    credits: { 
+      enabled: false 
+    }
+    
+  });
+  return chart;
+}
+// Create Voltage Chart
+function createVoltageChart() {
+  var chart = new Highcharts.Chart({
+    chart:{ 
+      renderTo:'chart-voltage',
+	zoomType: 'x' 
+    },
+    rangeSelector: {
+        enabled: true,
+        allButtonsEnabled: true,
+        inputEnabled: true,
+        buttons: [{
+          type: 'day',
+          count: 1,
+          text: '1D'
+        }, {
+          type: 'week',
+          count: 1,
+          text: '1W'
+        }, {
+          type: 'month',
+          count: 1,
+          text: '1M'
+        }, {
+          type: 'all',
+          text: 'All'
+        }],
+        selected: 4
+      },
+    series: [
+      {
+        data: VoltageMax_array,
+        type: 'area',
+        name: 'PQduino_Voltage Max'
+      },
+      {
+        data: VoltageMin_array,
+        type: 'area',
+        name: 'PQduino_Voltage Min'
+      }
+    ],
+    title: { 
+      text: undefined
+    },
+    plotOptions: {
+        area: {
+            fillColor: {
+            linearGradient: {
+                x1: 0,
+                y1: 0,
+                x2: 0,
+                y2: 1
+            },
+            stops: [
+            [0, Highcharts.getOptions().colors[0]],
+            [1, Highcharts.color(Highcharts.getOptions().colors[0]).setOpacity(0).get('rgba')]
+            ]
+        },
+        marker: {
+        radius: 2
+        },
+        lineWidth: 1,
+        states: {
+            hover: {
+        lineWidth: 1
+        }
+        },
+        threshold: null
+        }
+    },
+    xAxis: {
+      type: 'datetime',
+      dateTimeLabelFormats: { second: '%H:%M:%S' }
+    },
+    yAxis: {
+      title: { 
+        text: 'Voltage (V)' 
+      }
+    },
+    legend: {
+        enabled: false
+    },
+    time: {
+        timezoneOffset: 6 * 60
+    },
+    credits: { 
+      enabled: false 
+    }
+    
+  });
+  return chart;
+}
+// Create Current Chart
+function createCurrentChart() {
+  var chart = new Highcharts.Chart({
+    chart:{ 
+      renderTo:'chart-current',
+	zoomType: 'x' 
+    },
+    rangeSelector: {
+        enabled: true,
+        allButtonsEnabled: true,
+        inputEnabled: true,
+        buttons: [{
+          type: 'day',
+          count: 1,
+          text: '1D'
+        }, {
+          type: 'week',
+          count: 1,
+          text: '1W'
+        }, {
+          type: 'month',
+          count: 1,
+          text: '1M'
+        }, {
+          type: 'all',
+          text: 'All'
+        }],
+        selected: 4
+      },
+    series: [
+      {
+        data: CurrentMax_array,
+        type: 'area',
+        name: 'PQduino_Current Max'
+      },
+      {
+        data: CurrentMin_array,
+        type: 'area',
+        name: 'PQduino_Current Min'
+      }
+    ],
+    title: { 
+      text: undefined
+    },
+    plotOptions: {
+        area: {
+            fillColor: {
+            linearGradient: {
+                x1: 0,
+                y1: 0,
+                x2: 0,
+                y2: 1
+            },
+            stops: [
+            [0, Highcharts.getOptions().colors[0]],
+            [1, Highcharts.color(Highcharts.getOptions().colors[0]).setOpacity(0).get('rgba')]
+            ]
+        },
+        marker: {
+        radius: 2
+        },
+        lineWidth: 1,
+        states: {
+            hover: {
+        lineWidth: 1
+        }
+        },
+        threshold: null
+        }
+    },
+    xAxis: {
+      type: 'datetime',
+      dateTimeLabelFormats: { second: '%H:%M:%S' }
+    },
+    yAxis: {
+      title: { 
+        text: 'Current (A)' 
+      }
+    },
+    legend: {
+        enabled: false
+    },
+    time: {
+        timezoneOffset: 6 * 60
+    },
+    credits: { 
+      enabled: false 
+    }
+    
+  });
+  return chart;
+}
+// Create Energy Chart
+function createEnergyChart() {
+  var chart = new Highcharts.StockChart({
+        chart: {
+            renderTo:'chart-energy',
+            type: 'column'
+        },
+        rangeSelector: {
+            buttons: [{
+                type: 'hour',
+                count: 1,
+                text: '1h'
+            }, {
+                type: 'day',
+                count: 1,
+                text: '1D'
+            }, {
+                type: 'week',
+                count: 1,
+                text: '1W'
+            }, {
+                type: 'month',
+                count: 1,
+                text: '1M'
+            }, {
+                type: 'all',
+                text: 'All'
+            }]
+        },
+        title: { 
+            text: undefined
+        },
+        xAxis: {
+          type: 'datetime',
+          dateTimeLabelFormats: { second: '%H:%M:%S' }
+        },
+        yAxis: {
+        opposite:false,
+          title: { 
+            text: 'Energy (Wh)',
+            rotation:-90,
+          }
+          },
+        plotOptions: {
+            column: {
+                dataGrouping: {
+                    units: [
+                        ['minute', [1]],
+                        ['hour', [1]],
+                        ['day', [1]],
+                        ['month', [1]],
+                        ['year', null]
+                    ],
+                    groupPixelWidth: 100
+                }
+            }
+        },
+        subtitle: {
+            enabled: false 
+        },
+        credits: {
+            enabled: false 
+        },
+    series: [
+      {
+        data: Energy_array,
+        type: 'column',
+        name: 'PQduino_Current'
+      }
+    ],
+    time: {
+        timezoneOffset: 6 * 60
+    },
+    });
+    return chart;
+}
+  </script>
+
+</html>
